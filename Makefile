@@ -1,5 +1,5 @@
 CXX = clang++
-CXXFLAGS = -std=c++17 -Wall -Winline -ffast-math -pthread -O2 -g
+CXXFLAGS = -std=c++17 -Wall -Winline -pthread -ffast-math -O2 -g
 
 SRC_DIR = .
 BUILD_DIR = build

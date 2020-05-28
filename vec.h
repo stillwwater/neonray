@@ -17,7 +17,12 @@ struct Vec3 {
     static const Vec3 Down;
     static const Vec3 Forward;
 
-    float x, y, z;
+    union {
+        struct {
+            float x, y, z;
+        };
+        float a[3];
+    };
 
     Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
 
@@ -53,6 +58,7 @@ struct Vec3 {
     static inline Vec3 random_in_hemisphere(const Vec3 &normal);
 
     Vec3 operator-() const;
+    float operator[](int index) const;
 
     bool operator==(const Vec3 &v) const;
     bool operator!=(const Vec3 &v) const;
@@ -175,6 +181,10 @@ inline bool Vec3::operator!=(const Vec3 &v) const {
 
 inline Vec3 Vec3::operator-() const {
     return Vec3(-x, -y, -z);
+}
+
+inline float Vec3::operator[](int index) const {
+    return a[index];
 }
 
 } // ne

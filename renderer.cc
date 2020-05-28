@@ -132,6 +132,7 @@ void Renderer::render_progressive(const Camera &camera,
         write_bmp("tex.bmp", render_tex);
     }
     printf("\rrender: 100%%\n");
+    delete buffer;
 }
 
 Color Renderer::trace_ray(const Ray &r_in, const Entity *entity, int depth) {

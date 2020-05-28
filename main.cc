@@ -19,6 +19,8 @@ using namespace ne;
 
 std::unique_ptr<World> random_scene() {
     auto world = std::make_unique<World>();
+    World small_spheres;
+
     auto ground = new Diffuse(Color(0.5f, 0.5f, 0.5f));
     world->add(std::make_unique<Sphere>(Vec3(0,-1000,0), 1000, ground));
 
@@ -43,9 +45,11 @@ std::unique_ptr<World> random_scene() {
             } else {
                 mat = new Dielectric(1.5f);
             }
-            world->add(std::make_unique<Sphere>(center, 0.2f, mat));
+            small_spheres.add(std::make_unique<Sphere>(center, 0.2f, mat));
         }
     }
+
+    world->add(std::make_shared<BVH_Node>(small_spheres));
 
     auto mat1 = new Dielectric(1.5f);
     world->add(std::make_unique<Sphere>(Vec3(0, 1, 0), 1.0f, mat1));
@@ -75,7 +79,7 @@ int main(void) {
 
     auto world = random_scene();
 
-    Renderer renderer(20, 10, 4);
+    Renderer renderer(100, 16, 4);
     renderer.render_progressive(camera, world.get(), tex);
 
     write_bmp("tex.bmp", tex);

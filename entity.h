@@ -3,10 +3,12 @@
 
 #include <vector>
 #include <memory>
+#include <cstdio>
 
 #include "ray.h"
 #include "material.h"
 #include "vec.h"
+#include "aabb.h"
 
 namespace ne {
 
@@ -29,6 +31,8 @@ public:
         Range range,
         Hit &hit) const = 0;
 
+    virtual bool bounding_box(Aabb &box) const = 0;
+
     virtual ~Entity() {};
 };
 
@@ -43,6 +47,7 @@ public:
         : position(position), radius(radius), material(material) {}
 
     virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
 
     ~Sphere() {}
 };
@@ -57,8 +62,31 @@ public:
     inline void add(std::shared_ptr<Entity> entity);
 
     virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
 
     ~World() {}
+};
+
+// Bounding Volume Hierarchies
+class BVH_Node : public Entity {
+public:
+    std::shared_ptr<Entity> left;
+    std::shared_ptr<Entity> right;
+    Aabb aabb;
+
+    BVH_Node();
+
+    BVH_Node(World &world)
+        : BVH_Node(world.entities, 0, world.entities.size()) {}
+
+    BVH_Node(std::vector<std::shared_ptr<Entity>> &entities,
+             size_t start, size_t end);
+
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~BVH_Node() {}
 };
 
 inline void World::clear() {
