@@ -3,12 +3,16 @@ CXXFLAGS = -std=c++17 -Wall -Winline -pthread -ffast-math -O2 -g
 
 SRC_DIR = .
 BUILD_DIR = build
-ODIR = obj
 
-SRCS = main.cc vec.cc color.cc io.cc texture.cc entity.cc camera.cc material.cc renderer.cc
+SRCS = $(wildcard *.cc)
+
 _OBJS = $(subst .cc,.o,$(SRCS))
 OBJS = $(addprefix $(BUILD_DIR)/, $(_OBJS))
 
+_DEPS = $(subst .cc,.d,$(SRCS))
+DEPS = $(addprefix $(BUILD_DIR)/, $(_DEPS))
+
+.PHONY: all
 all: dirs $(BUILD_DIR)/neon
 
 .PHONY: dirs
@@ -17,12 +21,14 @@ dirs:
 
 $(BUILD_DIR)/neon: $(OBJS)
 	@echo "linking $@"
-	@$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	@$(CXX) $(CXXFLAGS) $^ -o $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cc
+-include $(DEPS)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cc Makefile
 	@echo "compiling $@"
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 .PHONY: clean
 clean:
-	@rm -f $(OBJS)
+	@rm -f $(OBJS) $(DEPS)

@@ -19,6 +19,7 @@ struct Hit {
 
     Vec3 position;
     Vec3 normal;
+    Vec3 uv;
     float dist;
     Face face;
     Material *material;

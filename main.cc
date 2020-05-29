@@ -7,6 +7,8 @@
 #include "ray.h"
 #include "io.h"
 #include "renderer.h"
+#include "shader.h"
+#include "perlin.h"
 
 #include <cstdio>
 #include <iostream>
@@ -17,11 +19,22 @@
 
 using namespace ne;
 
+std::unique_ptr<World> basic_scene() {
+    auto world = std::make_unique<World>();
+
+    auto m = new Diffuse(surf_marble(), Color{0.03f, 0.01f, 0.05f});
+    auto c = new Diffuse(surf_checker(), Color::Black);
+    world->add(std::make_shared<Sphere>(Vec3(0, -1000 ,0), 1000, c));
+    world->add(std::make_shared<Sphere>(Vec3(0, 2, 0), 2, m));
+
+    return world;
+}
+
 std::unique_ptr<World> random_scene() {
     auto world = std::make_unique<World>();
     World small_spheres;
 
-    auto ground = new Diffuse(Color(0.5f, 0.5f, 0.5f));
+    auto ground = new Diffuse(surf_checker(), Color(0.03f, 0.01f, 0.05f));
     world->add(std::make_unique<Sphere>(Vec3(0,-1000,0), 1000, ground));
 
     for (int a = -11; a < 11; a++) {
@@ -37,7 +50,7 @@ std::unique_ptr<World> random_scene() {
             if (rmat < 0.8f) {
                 // diffuse
                 auto albedo = Color::random() * Color::random();
-                mat = new Diffuse(albedo);
+                mat = new Diffuse(surf_solid_color(), albedo);
             } else if (rmat < 0.95f) {
                 auto albedo = Color::random(0.5f, 1);
                 float rough = randomf(0, 0.5f);
@@ -54,7 +67,7 @@ std::unique_ptr<World> random_scene() {
     auto mat1 = new Dielectric(1.5f);
     world->add(std::make_unique<Sphere>(Vec3(0, 1, 0), 1.0f, mat1));
 
-    auto mat2 = new Diffuse(Color::Red);
+    auto mat2 = new Diffuse(surf_solid_color(), Color::Red);
     world->add(std::make_unique<Sphere>(Vec3(-4, 1, 0), 1.0f, mat2));
 
     auto mat3 = new Metal(Color(0.7f, 0.6f, 0.5f), 0.0f);
@@ -64,7 +77,9 @@ std::unique_ptr<World> random_scene() {
 }
 
 int main(void) {
-    auto tex = new Texture(800, 600);
+    srand(1018);
+    perlin::init();
+    auto tex = new Texture(1920, 1080);
     write_bmp("tex.bmp", tex);
 
     int width = tex->width();
@@ -74,14 +89,14 @@ int main(void) {
     Vec3 cam_pos(13, 2, 3);
     Vec3 cam_lookat(0, 0, 0);
     float focus = 10.0f;
-    float aperture = 0.1f;
+    float aperture = 0;
     Camera camera(cam_pos, cam_lookat, Vec3::Up, 20, aspect, aperture, focus);
 
     auto world = random_scene();
 
-    Renderer renderer(100, 16, 4);
+    Renderer renderer(300, 16, 4);
     renderer.render_progressive(camera, world.get(), tex);
 
-    write_bmp("tex.bmp", tex);
+    //write_bmp("tex.bmp", tex);
     return 0;
 }

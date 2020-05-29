@@ -8,6 +8,15 @@
 
 namespace ne {
 
+Vec3 sphere_uv(const Vec3 &p) {
+    // u = phi/2pi, v = theta/pi
+    float phi = atan2f(p.z, p.x);
+    float theta = asinf(p.y);
+    float u = 1 - (phi + PI) / (2.0f*PI);
+    float v = (theta + PI/2.0f) / PI;
+    return Vec3(u, v, 0);
+}
+
 bool Sphere::ray_intersect(const Ray &ray, Range range, Hit &hit) const {
     Vec3 oc = ray.origin - position;
     float a = ray.direction.length_sqr();
@@ -34,6 +43,7 @@ bool Sphere::ray_intersect(const Ray &ray, Range range, Hit &hit) const {
     hit.position = ray.at(hit.dist);
     hit.normal = ((hit.position - position) / radius).normalized();
     hit.material = material;
+    hit.uv = sphere_uv((hit.position - position)/radius);
 
     if (Vec3::dot(ray.direction, hit.normal) >= 0) {
         // Invert normals if they are inside the entity

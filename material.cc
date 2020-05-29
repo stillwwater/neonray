@@ -20,7 +20,7 @@ bool Diffuse::scatter(
 ) const {
     Vec3 direction = hit.normal + Vec3::random_lambertian();
     r_out = Ray(hit.position, direction);
-    attenuation = albedo;
+    attenuation = shader(v2f{hit.uv, hit.position, albedo});
     return true;
 }
 
