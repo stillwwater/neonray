@@ -20,7 +20,7 @@ public:
         const Ray &r_in, const Hit &hit, Color &attenuation, Ray &r_out
     ) const = 0;
 
-    virtual Color emitted(float u, float v, const Vec3 &p) {
+    virtual Color emitted(float u, float v, const Vec3 &p) const {
         return Color::Black;
     }
 };
@@ -64,6 +64,23 @@ public:
     virtual bool scatter(
         const Ray &r_in, const Hit &hit, Color &attenuation, Ray &r_out
     ) const;
+};
+
+class Light : public Material {
+public:
+    Color emit;
+
+    Light(const Color &emit) : emit(emit) {}
+
+    virtual Color emitted(float u, float v, const Vec3 &p) const {
+        return emit;
+    }
+
+    virtual bool scatter(
+        const Ray &r_in, const Hit &hit, Color &attenuation, Ray &r_out
+    ) const {
+        return false;
+    }
 };
 
 } // ne

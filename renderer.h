@@ -51,7 +51,10 @@ public:
                             const Entity *entity,
                             const Texture *render_tex) const;
 
-    static Color trace_ray(const Ray &ray, const Entity *entity, int depth);
+    static Color trace_ray(const Ray &ray,
+                           const Color &bg,
+                           const Entity *entity,
+                           int depth);
 
 private:
     void render_chunk(const Camera &camera,

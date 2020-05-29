@@ -53,6 +53,74 @@ public:
     ~Sphere() {}
 };
 
+class PlaneXY : public Entity {
+public:
+    float x0, x1, y0, y1, z;
+    Material *material;
+
+    PlaneXY(float x0, float x1, float y0, float y1, float z, Material *m)
+        : x0(x0), x1(x1), y0(y0), y1(y1), z(z), material(m) {}
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~PlaneXY() {}
+};
+
+class PlaneXZ : public Entity {
+public:
+    float x0, x1, z0, z1, y;
+    Material *material;
+
+    PlaneXZ(float x0, float x1, float z0, float z1, float y, Material *m)
+        : x0(x0), x1(x1), z0(z0), z1(z1), y(y), material(m) {}
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~PlaneXZ() {}
+};
+
+class PlaneYZ : public Entity {
+public:
+    float y0, y1, z0, z1, x;
+    Material *material;
+
+    PlaneYZ(float y0, float y1, float z0, float z1, float x, Material *m)
+        : y0(y0), y1(y1), z0(z0), z1(z1), x(x), material(m) {}
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~PlaneYZ() {}
+};
+
+class Flip : public Entity {
+public:
+    std::shared_ptr<Entity> e;
+
+    Flip(std::shared_ptr<Entity> e) : e(e) {}
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~Flip() {}
+};
+
+class Move : public Entity {
+public:
+    std::shared_ptr<Entity> entity;
+    Vec3 offset;
+
+    Move(std::shared_ptr<Entity> e, const Vec3 &offset)
+        : entity(e), offset(offset) {}
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~Move() {}
+};
+
 class World : public Entity {
 public:
     std::vector<std::shared_ptr<Entity>> entities;
@@ -66,6 +134,21 @@ public:
     virtual bool bounding_box(Aabb &box) const;
 
     ~World() {}
+};
+
+class Box : public Entity {
+public:
+    World sides;
+    Vec3 box_min;
+    Vec3 box_max;
+
+    Box() {}
+    Box(const Vec3 &p0, const Vec3 &p1, Material *m);
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~Box() {}
 };
 
 // Bounding Volume Hierarchies
@@ -97,6 +180,22 @@ inline void World::clear() {
 inline void World::add(std::shared_ptr<Entity> entity) {
     entities.push_back(entity);
 }
+
+class RotateY : public Entity {
+public:
+    std::shared_ptr<Entity> entity;
+    float sin_theta;
+    float cos_theta;
+    bool has_box;
+    Aabb aabb;
+
+    RotateY(std::shared_ptr<Entity> entity, float angle);
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~RotateY() {}
+};
 
 } // ne
 

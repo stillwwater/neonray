@@ -21,6 +21,7 @@ void render_job(const Camera &camera,
     srand(job.seed);
     int width = render_tex->width();
     int height = render_tex->height();
+    auto bg = Color::Black;
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -30,7 +31,7 @@ void render_job(const Camera &camera,
                 float u = (float(x) + randomf()) / float(width - 1);
                 float v = (float(y + job.chunk.offset_y) + randomf()) / h;
                 auto ray = camera.ray_from_view(u, v);
-                color = color + Renderer::trace_ray(ray, entity, job.max_depth);
+                color = color + Renderer::trace_ray(ray, bg, entity, job.max_depth);
             }
             color = Color::gamma2(color, 1.0f / job.aa_samples);
             render_tex->write_pixel(x, y, color);
@@ -135,24 +136,32 @@ void Renderer::render_progressive(const Camera &camera,
     delete buffer;
 }
 
-Color Renderer::trace_ray(const Ray &r_in, const Entity *entity, int depth) {
+Color Renderer::trace_ray(const Ray &r_in,
+                          const Color &bg,
+                          const Entity *entity,
+                          int depth)
+{
     if (depth <= 0) {
         return Color::Black;
     }
     Hit hit;
 
-    if (entity->ray_intersect(r_in, Range{MinDist, Infinity}, hit)) {
-        Ray r_out;
-        Color attenuation;
-        if (hit.material->scatter(r_in, hit, attenuation, r_out)) {
-            return attenuation * trace_ray(r_out, entity, depth - 1);
-        }
-        return Color::Black;
+    if (!entity->ray_intersect(r_in, Range{MinDist, Infinity}, hit)) {
+        return bg;
+        //auto direction = r_in.direction.normalized();
+        //float t = 0.5f*(direction.y + 1.0f);
+        //return Color::lerp(Color::White, Color(0.5f, 0.7f, 1.0f), t);
     }
 
-    auto direction = r_in.direction.normalized();
-    float t = 0.5f*(direction.y + 1.0f);
-    return Color::lerp(Color::White, Color(0.5f, 0.7f, 1.0f), t);
+    Ray r_out;
+    Color attenuation;
+    Color emitted = hit.material->emitted(hit.uv.x, hit.uv.y, hit.position);
+
+    if (!hit.material->scatter(r_in, hit, attenuation, r_out)) {
+        return emitted;
+    }
+    return emitted + attenuation * trace_ray(r_out, bg, entity, depth - 1);
+
 }
 
 } // ne

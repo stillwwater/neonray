@@ -19,13 +19,55 @@
 
 using namespace ne;
 
+std::unique_ptr<World> cornell_box() {
+    auto world = std::make_unique<World>();
+    World boxes;
+
+    auto red = new Diffuse(surf_solid_color(), Color(0.65f, 0.05f, 0.05f));
+    auto green = new Diffuse(surf_solid_color(), Color(0.12f, 0.45f, 0.15f));
+    auto white = new Diffuse(surf_solid_color(), Color(0.73f, 0.73f, 0.73f));
+    auto light = new Light(Color(1, 0.878, 0.768) * 38.0f);
+
+    world->add(std::make_shared<Flip>(
+                std::make_shared<PlaneYZ>(0, 555, 0, 555, 555, red)));
+
+    world->add(std::make_shared<PlaneYZ>(0, 555, 0, 555, 0, green));
+
+    world->add(std::make_shared<PlaneXZ>(213, 343, 227, 332, 554, light));
+
+    world->add(std::make_shared<Flip>(
+                std::make_shared<PlaneXZ>(0, 555, 0, 555, 555, white)));
+
+    world->add(std::make_shared<PlaneXZ>(0, 555, 0, 555, 0, white));
+    world->add(std::make_shared<Flip>(
+                std::make_shared<PlaneXY>(0, 555, 0, 555, 555, white)));
+
+    std::shared_ptr<Entity> box1 =
+        std::make_shared<Box>(Vec3::zero, Vec3(165, 330, 165), white);
+    box1 = std::make_shared<RotateY>(box1, 15);
+    box1 = std::make_shared<Move>(box1, Vec3(265, 0, 295));
+    boxes.add(box1);
+
+    std::shared_ptr<Entity> box2 =
+        std::make_shared<Box>(Vec3::zero, Vec3(165, 165, 165), white);
+    box2 = std::make_shared<RotateY>(box2, -18);
+    box2 = std::make_shared<Move>(box2, Vec3(130, 0, 65));
+    boxes.add(box2);
+    world->add(std::make_shared<BVH_Node>(boxes));
+    return world;
+}
+
 std::unique_ptr<World> basic_scene() {
     auto world = std::make_unique<World>();
 
-    auto m = new Diffuse(surf_marble(), Color{0.03f, 0.01f, 0.05f});
+    auto m = new Diffuse(surf_marble(), Color::Black);
     auto c = new Diffuse(surf_checker(), Color::Black);
     world->add(std::make_shared<Sphere>(Vec3(0, -1000 ,0), 1000, c));
     world->add(std::make_shared<Sphere>(Vec3(0, 2, 0), 2, m));
+
+    auto l = new Light(Color::White * 4);
+    world->add(std::make_shared<Sphere>(Vec3(0, 7, 0), 2, l));
+    world->add(std::make_shared<PlaneYZ>(3, 5, 1, 3, -2, l));
 
     return world;
 }
@@ -79,24 +121,23 @@ std::unique_ptr<World> random_scene() {
 int main(void) {
     srand(1018);
     perlin::init();
-    auto tex = new Texture(1920, 1080);
+    auto tex = new Texture(720, 720);
     write_bmp("tex.bmp", tex);
 
     int width = tex->width();
     int height = tex->height();
     float aspect = float(width) / float(height);
 
-    Vec3 cam_pos(13, 2, 3);
-    Vec3 cam_lookat(0, 0, 0);
+    Vec3 cam_pos(278, 278, -800);
+    Vec3 cam_lookat(278, 278, 0);
     float focus = 10.0f;
     float aperture = 0;
-    Camera camera(cam_pos, cam_lookat, Vec3::Up, 20, aspect, aperture, focus);
+    Camera camera(cam_pos, cam_lookat, Vec3::Up, 40, aspect, aperture, focus);
 
-    auto world = random_scene();
+    auto world = cornell_box();
 
-    Renderer renderer(300, 16, 4);
+    Renderer renderer(2000, 20, 4);
     renderer.render_progressive(camera, world.get(), tex);
 
-    //write_bmp("tex.bmp", tex);
     return 0;
 }
