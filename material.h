@@ -39,11 +39,14 @@ public:
 
 class Metal : public Material {
 public:
-    Color albedo;
     float roughness;
 
-    Metal(const Color &albedo, float roughness)
-        : albedo(albedo), roughness(roughness) {}
+    Metal(const Shader &s, const Color &a, float roughness)
+        : roughness(roughness)
+    {
+        shader = s;
+        albedo = a;
+    }
 
     virtual bool scatter(
         const Ray &r_in, const Hit &hit, Color &attenuation, Ray &r_out

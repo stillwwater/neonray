@@ -63,6 +63,96 @@ bool Sphere::bounding_box(Aabb &box) const {
     return true;
 }
 
+bool Triangle::ray_intersect(const Ray &ray, Range range, Hit &hit) const {
+    // Plane normal
+    Vec3 edge1 = v1 - v0;
+    Vec3 edge2 = v2 - v0;
+    Vec3 norm = Vec3::cross(edge1, edge2).normalized();
+    float det = norm.length_sqr();
+
+    float dir = Vec3::dot(norm, ray.direction);
+    if (fabsf(Vec3::dot(norm, ray.direction)) < Epsilon) {
+        // Ray parallel to triangle plane
+        return false;
+    }
+
+    float d = Vec3::dot(norm, v0);
+    float dist = (Vec3::dot(norm, ray.origin)-d) / -dir;
+    if (dist < range.min || dist > range.max) {
+        return false;
+    }
+    Vec3 p = ray.at(dist);
+
+    Vec3 e0 = v1 - v0;
+    Vec3 vp0 = p - v0;
+    float c = Vec3::dot(norm, Vec3::cross(e0, vp0));
+    if (c < 0) return false;
+
+    Vec3 e1 = v2 - v1;
+    Vec3 vp1 = p - v1;
+    float u = Vec3::dot(norm, Vec3::cross(e1, vp1));
+    if (u < 0) return false;
+
+    Vec3 e2 = v0 - v2;
+    Vec3 vp2 = p - v2;
+    float v = Vec3::dot(norm, Vec3::cross(e2, vp2));
+    if (v < 0) return false;
+
+    hit.material = material;
+    hit.position = ray.at(dist);
+    hit.normal = norm;
+    hit.dist = dist;
+    hit.uv = Vec3(u / det, v / det, 0);
+    face_normal(ray, hit);
+    return true;
+}
+
+bool Triangle::bounding_box(Aabb &box) const {
+    return false;
+}
+
+Mesh::Mesh(const std::vector<Vec3> &vertecies, Material *material) {
+    tris.reserve(vertecies.size() / 3);
+    for (int i = 0; i < vertecies.size(); i += 3) {
+        Vec3 v0 = vertecies[i + 0];
+        Vec3 v1 = vertecies[i + 1];
+        Vec3 v2 = vertecies[i + 2];
+        tris.push_back(std::make_shared<Triangle>(v0, v1, v2, material));
+    }
+    Vec3 min = Vec3::one * Infinity;
+    Vec3 max = Vec3::one * -Infinity;
+    for (const auto &v : vertecies) {
+        for (int a = 0; a < 3; ++a) {
+            if (v[a] < min[a]) {
+                min.a[a] = v[a];
+            }
+            if (v[a] > max[a]) {
+                max.a[a] = v[a];
+            }
+        }
+    }
+    aabb = Aabb(min, max);
+}
+
+bool Mesh::ray_intersect(const Ray &ray, Range range, Hit &hit) const {
+    Hit current_hit;
+    bool any_hit = false;
+
+    for (const auto &tri : tris) {
+        if (tri->ray_intersect(ray, range, current_hit)) {
+            range.max = current_hit.dist;
+            hit = current_hit;
+            any_hit = true;
+        }
+    }
+    return any_hit;
+}
+
+bool Mesh::bounding_box(Aabb &box) const {
+    box = aabb;
+    return true;
+}
+
 bool PlaneXY::ray_intersect(const Ray &ray, Range range, Hit &hit) const {
     float dist = (z-ray.origin.z) / ray.direction.z;
     if (dist < range.min || dist > range.max) {

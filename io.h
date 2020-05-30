@@ -7,6 +7,7 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <vector>
 
 namespace ne {
 
@@ -43,6 +44,8 @@ struct BitmapDIBHeader {
 
 Texture *read_bmp(const std::string &filename);
 bool write_bmp(const std::string &filename, const Texture *tex);
+
+std::vector<Vec3> read_obj(const std::string &filename);
 
 } // ne
 

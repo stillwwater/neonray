@@ -30,7 +30,7 @@ bool Metal::scatter(
     Vec3 reflected = Vec3::reflect(r_in.direction.normalized(), hit.normal);
     Vec3 r = roughness * Vec3::random_in_hemisphere(hit.normal);
     r_out = Ray(hit.position, reflected + r);
-    attenuation = albedo;
+    attenuation = shader(v2f{hit.uv, hit.position, albedo});
 
     // Absorb ray if it points towards the surface
     return Vec3::dot(r_out.direction, hit.normal) > 0;

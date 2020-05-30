@@ -37,6 +37,35 @@ public:
     virtual ~Entity() {};
 };
 
+class Triangle : public Entity {
+public:
+    Vec3 v0, v1, v2;
+    Material *material;
+
+    Triangle() {}
+    Triangle(Vec3 v0, Vec3 v1, Vec3 v2, Material *material)
+        : v0(v0), v1(v1), v2(v2), material(material) {}
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~Triangle() {}
+};
+
+class Mesh : public Entity {
+public:
+    Aabb aabb;
+    std::vector<std::shared_ptr<Triangle>> tris;
+
+    Mesh() {}
+    Mesh(const std::vector<Vec3> &vertecies, Material *material);
+
+    virtual bool ray_intersect(const Ray &ray, Range range, Hit &hit) const;
+    virtual bool bounding_box(Aabb &box) const;
+
+    ~Mesh() {}
+};
+
 class Sphere : public Entity {
 public:
     Vec3 position;
